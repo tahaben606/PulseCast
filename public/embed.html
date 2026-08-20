@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseCast Player Embed</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #121212; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; padding: 12px; }
+    .card { display: flex; align-items: center; gap: 14px; background: #181818; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; width: 100%; height: 100%; }
+    .art { width: 64px; height: 64px; border-radius: 6px; object-fit: cover; background: #282828; flex-shrink: 0; }
+    .info { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 2px; }
+    .title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .artist { font-size: 12px; color: #b3b3b3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-play { width: 44px; height: 44px; border-radius: 50%; background: #1db954; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .btn-play svg { fill: black; width: 18px; height: 18px; }
+    .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 6px; position: relative; cursor: pointer; }
+    .progress-fill { height: 100%; background: #1db954; width: 0%; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img id="art" class="art" src="/public/images/default-track.png" alt="Cover" />
+    <div class="info">
+      <span class="title" id="title">Loading...</span>
+      <span class="artist" id="artist">PulseCast</span>
+      <div class="progress-bar" id="bar">
+        <div class="progress-fill" id="fill"></div>
+      </div>
+    </div>
+    <button class="btn-play" id="btnPlay">
+      <svg id="playIcon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+    </button>
+  </div>
+
+  <script>
+    const trackId = window.location.pathname.split('/').pop();
+    const audio = new Audio(`/api/stream/${trackId}`);
+    const art = document.getElementById('art');
+    const title = document.getElementById('title');
+    const artist = document.getElementById('artist');
+    const btnPlay = document.getElementById('btnPlay');
+    const playIcon = document.getElementById('playIcon');
+    const bar = document.getElementById('bar');
+    const fill = document.getElementById('fill');
+
+    fetch(`/api/tracks/${trackId}`).then(r => r.json()).then(d => {
+      if (d.success) {
+        title.textContent = d.track.title;
+        artist.textContent = d.track.artist;
+        if (d.track.thumbnail) art.src = d.track.thumbnail;
+      }
+    });
+
+    btnPlay.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+        playIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>`;
+      } else {
+        audio.pause();
+        playIcon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
+      }
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        fill.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+      }
+    });
+
+    bar.addEventListener('click', (e) => {
+      const rect = bar.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      if (audio.duration) audio.currentTime = pos * audio.duration;
+    });
+  </script>
+</body>
+</html>

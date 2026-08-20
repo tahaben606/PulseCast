@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseCast • Spotify-Style Audio & YouTube Streamer</title>
+  <link rel="stylesheet" href="/public/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231db954'><circle cx='12' cy='12' r='10'/><path fill='%23000' d='M17.5 15.2c-.2.3-.6.4-.9.2-2.5-1.5-5.6-1.8-9.3-1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4-.9 7.5-.6 10.4 1.1.3.2.3.6.2.9zm1.2-2.7c-.3.4-.8.5-1.2.3-2.9-1.8-7.3-2.3-10.7-1.3-.4.1-.9-.1-1-.6-.1-.4.1-.9.6-1 3.9-1.2 8.7-.6 12 1.4.4.2.5.8.3 1.2zm.1-2.9C15.3 7.5 9.6 7.3 6.3 8.3c-.5.2-1.1-.1-1.2-.7-.2-.5.1-1.1.7-1.2 3.8-1.2 10.1-.9 14.1 1.5.5.3.6.9.3 1.4-.3.5-.9.6-1.4.3z'/></svg>" />
+</head>
+<body>
+  <!-- Main App Layout -->
+  <div class="app-container">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <a href="/" class="brand-logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10"/>
+          <path fill="#000" d="M17.5 15.2c-.2.3-.6.4-.9.2-2.5-1.5-5.6-1.8-9.3-1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4-.9 7.5-.6 10.4 1.1.3.2.3.6.2.9zm1.2-2.7c-.3.4-.8.5-1.2.3-2.9-1.8-7.3-2.3-10.7-1.3-.4.1-.9-.1-1-.6-.1-.4.1-.9.6-1 3.9-1.2 8.7-.6 12 1.4.4.2.5.8.3 1.2zm.1-2.9C15.3 7.5 9.6 7.3 6.3 8.3c-.5.2-1.1-.1-1.2-.7-.2-.5.1-1.1.7-1.2 3.8-1.2 10.1-.9 14.1 1.5.5.3.6.9.3 1.4-.3.5-.9.6-1.4.3z"/>
+        </svg>
+        <span>PulseCast</span>
+      </a>
+
+      <nav class="nav-section">
+        <a class="nav-item active" id="navHome">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>Home</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Library / Playlists Header -->
+      <div class="library-header">
+        <div class="library-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>Your Library</span>
+        </div>
+        <button class="btn-icon-subtle" id="btnSidebarCreatePlaylist" title="Create Playlist">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+
+      <!-- Playlists Navigation List -->
+      <div class="playlist-list" id="playlistNavList">
+        <!-- Injected via app.js -->
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT VIEW -->
+    <main class="main-view">
+      <!-- Sticky Top Bar -->
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <div class="search-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" placeholder="Search songs, artists, uploads..." />
+          </div>
+        </div>
+
+        <div class="top-bar-right">
+          <button class="btn-pill" id="btnOpenLiveRadio" style="background:linear-gradient(135deg, #e22134, #990011); color:white;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#fff; animation:pulse 1s infinite; margin-right:4px;"></span>
+            <span>Live Radio</span>
+          </button>
+          <button class="btn-pill btn-spotify" id="btnOpenSpotify">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path fill="#000" d="M17.5 15.2c-.2.3-.6.4-.9.2-2.5-1.5-5.6-1.8-9.3-1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4-.9 7.5-.6 10.4 1.1.3.2.3.6.2.9zm1.2-2.7c-.3.4-.8.5-1.2.3-2.9-1.8-7.3-2.3-10.7-1.3-.4.1-.9-.1-1-.6-.1-.4.1-.9.6-1 3.9-1.2 8.7-.6 12 1.4.4.2.5.8.3 1.2zm.1-2.9C15.3 7.5 9.6 7.3 6.3 8.3c-.5.2-1.1-.1-1.2-.7-.2-.5.1-1.1.7-1.2 3.8-1.2 10.1-.9 14.1 1.5.5.3.6.9.3 1.4-.3.5-.9.6-1.4.3z"/></svg>
+            <span>Import Spotify</span>
+          </button>
+          <button class="btn-pill btn-yt" id="btnOpenYt">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <span>Stream YouTube</span>
+          </button>
+          <button class="btn-pill btn-secondary" id="btnOpenUpload">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span>Upload Audio</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Main Container -->
+      <div class="view-scroll-content">
+        <!-- Hero Playlist Banner -->
+        <div class="hero-banner">
+          <div class="hero-art" id="heroArt">
+            <!-- Dynamic Icon/Art -->
+          </div>
+          <div class="hero-info">
+            <span class="hero-type">Playlist</span>
+            <h1 class="hero-title" id="heroTitle">All Tracks</h1>
+            <p class="hero-desc" id="heroDesc">Your complete library of uploaded songs and YouTube streams</p>
+            <div class="hero-meta" id="heroMeta">
+              <span>0 songs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar" id="actionBar">
+          <button class="btn-play-hero" id="btnHeroPlay" title="Play Playlist">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </button>
+          <button class="btn-pill btn-secondary" id="btnHeroCreatePlaylist">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>New Playlist</span>
+          </button>
+          <button class="btn-icon-subtle" id="btnHeroEditPlaylist" title="Edit Playlist" style="display:none; padding:10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          </button>
+          <button class="btn-icon-subtle" id="btnHeroDeletePlaylist" title="Delete Playlist" style="display:none; padding:10px; color:#ff5555;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </button>
+        </div>
+
+        <!-- Track List Table -->
+        <table class="track-table">
+          <thead>
+            <tr>
+              <th class="center" style="width: 40px;">#</th>
+              <th>Title</th>
+              <th style="width: 140px;">Source</th>
+              <th class="center" style="width: 80px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </th>
+              <th style="width: 140px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="trackTableBody">
+            <!-- Dynamic Track Rows -->
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          <h4 id="emptyStateTitle">No tracks in this playlist</h4>
+          <p id="emptyStateDesc">Upload audio files, import Spotify playlists, or paste a YouTube link to begin streaming immediately.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR (Now Playing, Visualizer, Queue) -->
+    <aside class="right-sidebar" id="rightSidebar">
+      <div class="now-playing-header">
+        <h3>Now Playing</h3>
+      </div>
+
+      <!-- Large Cover Art -->
+      <div class="now-playing-large-art">
+        <img id="nowPlayingThumb" src="/public/images/default-track.svg" alt="Artwork" />
+      </div>
+
+      <div class="now-playing-track-meta">
+        <h4 id="nowPlayingTitle" style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No track selected</h4>
+        <span id="nowPlayingArtist" style="font-size: 13px; color: var(--text-secondary);">Select a track to start</span>
+      </div>
+
+      <!-- Live Web Audio Frequency Visualizer -->
+      <div class="visualizer-card">
+        <div class="visualizer-header">
+          <span>Audio Visualizer</span>
+          <span style="font-size: 10px; color: var(--spotify-green);">LIVE FFT</span>
+        </div>
+        <canvas id="audioVisualizerCanvas"></canvas>
+      </div>
+
+      <!-- Up Next Queue -->
+      <div class="queue-card">
+        <div class="queue-title">Up Next</div>
+        <div class="queue-list" id="queueList">
+          <!-- Queue Items -->
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- PERSISTENT SPOTIFY BOTTOM PLAYER BAR -->
+  <footer class="player-bar">
+    <!-- Left: Track info & Heart -->
+    <div class="player-left">
+      <img id="playerThumb" class="player-thumb" src="/public/images/default-track.svg" alt="Cover" />
+      <div class="player-track-info">
+        <span id="playerTitle" class="player-title">Select a track</span>
+        <span id="playerArtist" class="player-artist">PulseCast Player</span>
+      </div>
+      <button class="btn-player-fav" id="btnPlayerFav" title="Like / Save Track">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </button>
+    </div>
+
+    <!-- Center: Playback Controls & Progress Bar -->
+    <div class="player-center">
+      <div class="player-controls">
+        <button class="btn-ctrl" id="btnPlayerShuffle" title="Shuffle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        </button>
+        <button class="btn-ctrl" id="btnPlayerPrev" title="Previous Track (Shift+P)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line></svg>
+        </button>
+        <button class="btn-play-main" id="btnPlayerPlay" title="Play/Pause (Space)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+        <button class="btn-ctrl" id="btnPlayerNext" title="Next Track (Shift+N)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line></svg>
+        </button>
+        <button class="btn-ctrl" id="btnPlayerRepeat" title="Repeat (Off / All / One)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        </button>
+      </div>
+
+      <!-- Seek Bar -->
+      <div class="playback-bar">
+        <span class="time-label" id="currentTimeLabel">0:00</span>
+        <div class="progress-track" id="progressTrack">
+          <div class="progress-fill" id="progressFill">
+            <div class="progress-thumb"></div>
+          </div>
+        </div>
+        <span class="time-label" id="totalDurationLabel">0:00</span>
+      </div>
+    </div>
+
+    <!-- Right: Volume, Sidebar Toggle & Share -->
+    <div class="player-right">
+      <button class="btn-ctrl" id="btnPlayerShare" title="Get Auto-Play / Game Stream Link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+      </button>
+      <button class="btn-ctrl" id="btnToggleRightSidebar" title="Toggle Queue & Visualizer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      </button>
+      <div class="volume-bar">
+        <button class="btn-ctrl" id="btnMute" title="Mute/Unmute">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+        <div class="volume-track" id="volumeTrack">
+          <div class="volume-fill" id="volumeFill"></div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: Create Playlist -->
+  <div class="modal-overlay" id="createPlaylistModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create New Playlist</h3>
+        <button class="btn-icon-subtle" id="btnCloseCreatePlaylist">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newPlaylistName">Playlist Name</label>
+          <input type="text" class="input-field" id="newPlaylistName" placeholder="My Awesome Playlist" />
+        </div>
+        <div class="form-group">
+          <label for="newPlaylistDesc">Description (optional)</label>
+          <input type="text" class="input-field" id="newPlaylistDesc" placeholder="Best gaming / driving tracks..." />
+        </div>
+        <div class="form-group">
+          <label for="newPlaylistCover">Cover Image URL (optional)</label>
+          <input type="text" class="input-field" id="newPlaylistCover" placeholder="https://example.com/image.jpg" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-pill btn-secondary" id="btnCancelCreatePlaylist">Cancel</button>
+        <button class="btn-pill btn-primary" id="btnSubmitCreatePlaylist">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Edit Playlist -->
+  <div class="modal-overlay" id="editPlaylistModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Edit Playlist Details</h3>
+        <button class="btn-icon-subtle" id="btnCloseEditPlaylist">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editPlaylistName">Playlist Name</label>
+          <input type="text" class="input-field" id="editPlaylistName" />
+        </div>
+        <div class="form-group">
+          <label for="editPlaylistDesc">Description</label>
+          <input type="text" class="input-field" id="editPlaylistDesc" />
+        </div>
+        <div class="form-group">
+          <label for="editPlaylistCover">Cover Image URL</label>
+          <input type="text" class="input-field" id="editPlaylistCover" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-pill btn-secondary" id="btnCancelEditPlaylist">Cancel</button>
+        <button class="btn-pill btn-primary" id="btnSubmitEditPlaylist">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Song to Playlist -->
+  <div class="modal-overlay" id="addToPlaylistModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--spotify-green)" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+          <h3>Add to Playlist</h3>
+        </div>
+        <button class="btn-icon-subtle" id="btnCloseAddToPlaylist">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="addToPlaylistSongPreview" style="display:flex; align-items:center; gap:12px; background:var(--bg-surface-elevated); padding:10px; border-radius:8px;">
+          <img id="addToPlaylistThumb" src="/public/images/default-track.svg" style="width:40px; height:40px; border-radius:4px; object-fit:cover;" />
+          <div style="overflow:hidden; flex:1;">
+            <strong id="addToPlaylistTitle" style="font-size:13px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Song Title</strong>
+            <span id="addToPlaylistArtist" style="font-size:12px; color:var(--text-secondary);">Artist</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Select Playlists:</label>
+          <div id="playlistSelectionList" style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
+            <!-- Injected playlists list -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Upload Local Audio -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Upload Audio Files</h3>
+        <button class="btn-icon-subtle" id="btnCloseUpload">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="dropzone" id="uploadDropzone">
+          <input type="file" id="audioFileInput" multiple accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg" style="display:none;" />
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <p><strong>Click to browse</strong> or drag & drop audio files here</p>
+          <span>Supports MP3, WAV, M4A, AAC, FLAC, OGG (up to 150MB per file)</span>
+        </div>
+
+        <div id="uploadProgressCard" style="display:none;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+            <span>Uploading & Extracting ID3 tags...</span>
+          </div>
+          <div style="width:100%; height:6px; background:#282828; border-radius:3px; overflow:hidden;">
+            <div id="uploadProgressBar" style="width:0%; height:100%; background:var(--spotify-green); transition:width 0.3s;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Import Spotify Playlist / Album / Track -->
+  <div class="modal-overlay" id="spotifyModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#1db954"><circle cx="12" cy="12" r="10"/><path fill="#000" d="M17.5 15.2c-.2.3-.6.4-.9.2-2.5-1.5-5.6-1.8-9.3-1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4-.9 7.5-.6 10.4 1.1.3.2.3.6.2.9zm1.2-2.7c-.3.4-.8.5-1.2.3-2.9-1.8-7.3-2.3-10.7-1.3-.4.1-.9-.1-1-.6-.1-.4.1-.9.6-1 3.9-1.2 8.7-.6 12 1.4.4.2.5.8.3 1.2zm.1-2.9C15.3 7.5 9.6 7.3 6.3 8.3c-.5.2-1.1-.1-1.2-.7-.2-.5.1-1.1.7-1.2 3.8-1.2 10.1-.9 14.1 1.5.5.3.6.9.3 1.4-.3.5-.9.6-1.4.3z"/></svg>
+          <h3>Import from Spotify</h3>
+        </div>
+        <button class="btn-icon-subtle" id="btnCloseSpotify">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="spotifyUrlInput">Spotify Playlist, Album, or Track URL</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="input-field" id="spotifyUrlInput" placeholder="https://open.spotify.com/playlist/..." style="flex:1;" />
+            <button class="btn-pill btn-secondary" id="btnSpotifyPreview">Preview</button>
+          </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div id="spotifyPreviewCard" style="display:none; align-items:center; gap:14px; background:var(--bg-surface-elevated); padding:12px; border-radius:8px; border:1px solid var(--border-subtle);">
+          <img id="spotifyPreviewThumb" src="" alt="Thumbnail" style="width:64px; height:64px; object-fit:cover; border-radius:6px;" />
+          <div style="display:flex; flex-direction:column; overflow:hidden; flex:1;">
+            <strong id="spotifyPreviewTitle" style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></strong>
+            <span id="spotifyPreviewAuthor" style="font-size:12px; color:var(--text-secondary);"></span>
+            <span id="spotifyPreviewCount" style="font-size:11px; color:var(--spotify-green); margin-top:2px;"></span>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary);">
+          <input type="checkbox" id="spotifyCreatePlaylistCheckbox" checked style="accent-color:var(--spotify-green); width:16px; height:16px;" />
+          <label for="spotifyCreatePlaylistCheckbox">Create dedicated playlist in library</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-pill btn-spotify" id="btnSpotifyImport">Import Playlist</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Import YouTube Link -->
+  <div class="modal-overlay" id="ytModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Stream YouTube Audio</h3>
+        <button class="btn-icon-subtle" id="btnCloseYt">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="ytUrlInput">YouTube Video or Playlist URL</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="input-field" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;" />
+            <button class="btn-pill btn-secondary" id="btnYtPreview">Preview</button>
+          </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div id="ytPreviewCard" style="display:none; align-items:center; gap:14px; background:var(--bg-surface-elevated); padding:12px; border-radius:8px; border:1px solid var(--border-subtle);">
+          <img id="ytPreviewThumb" src="" alt="Thumbnail" style="width:64px; height:64px; object-fit:cover; border-radius:6px;" />
+          <div style="display:flex; flex-direction:column; overflow:hidden; flex:1;">
+            <strong id="ytPreviewTitle" style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></strong>
+            <span id="ytPreviewAuthor" style="font-size:12px; color:var(--text-secondary);"></span>
+            <span id="ytPreviewDuration" style="font-size:11px; color:var(--spotify-green); margin-top:2px;"></span>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary);">
+          <input type="checkbox" id="ytCacheCheckbox" checked style="accent-color:var(--spotify-green); width:16px; height:16px;" />
+          <label for="ytCacheCheckbox">Cache audio locally for ultra-fast instant playback & seeking</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-pill btn-primary" id="btnYtImport">Add to Playlist</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Share Links & Auto-Play Generator -->
+  <div class="modal-overlay" id="shareModal">
+    <div class="modal-card" style="max-width: 620px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--spotify-green)" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+          <h3>Share & Stream Everywhere</h3>
+        </div>
+        <button class="btn-icon-subtle" id="closeShareModal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; align-items:center; gap:16px; background:var(--bg-surface-elevated); padding:12px 16px; border-radius:8px;">
+          <img id="shareTrackThumb" src="/public/images/default-track.svg" alt="Cover" style="width:48px; height:48px; border-radius:4px; object-fit:cover;" />
+          <div style="display:flex; flex-direction:column; overflow:hidden; flex:1;">
+            <span style="font-size:11px; text-transform:uppercase; color:var(--spotify-green); font-weight:700;">Selected Track</span>
+            <strong id="shareTrackTitle" style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Track Title</strong>
+          </div>
+          <div id="shareQrContainer"></div>
+        </div>
+
+        <!-- Custom Public Domain Override -->
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:6px; border:1px solid var(--border-subtle);">
+          <span style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Custom Domain / Tunnel:</span>
+          <input type="text" class="input-field" id="shareCustomDomain" placeholder="e.g. https://my-radio.ngrok-free.app or http://192.168.1.50:3000" style="flex:1; padding:6px 10px; font-size:12px;" />
+        </div>
+
+        <!-- 1. Live In-Game Broadcast Radio Link (Single Permanent URL) -->
+        <div class="share-link-group" style="background: rgba(226, 33, 52, 0.12); border: 1px solid rgba(226, 33, 52, 0.4); padding: 12px; border-radius: 8px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <label style="font-size:13px; font-weight:800; color:#ff4d5e; display:flex; align-items:center; gap:6px;">
+              🔴 Live In-Game Broadcast (DJ Mode - Instant Song Sync)
+            </label>
+            <span style="font-size:10px; color:#ff7788; font-weight:700; text-transform:uppercase;">Permanent In-Game URL</span>
+          </div>
+          <p style="font-size:11px; color:var(--text-secondary); margin-bottom:8px; line-height:1.4;">
+            Put this single link into your game radio once. Whenever you click or switch any song on this website, all in-game listeners will immediately hear the new song in real time!
+          </p>
+          <div class="share-link-row" style="margin-bottom:6px;">
+            <input type="text" class="share-link-input" id="shareLiveLink" readonly style="border-color:rgba(226, 33, 52, 0.4); color:#fff;" />
+            <button class="btn-copy btn-copy-link" data-target="shareLiveLink" style="background:#e22134; color:white;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Live Link
+            </button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:11px; color:var(--text-secondary); width:90px;">LAN / Server IP:</span>
+            <input type="text" class="share-link-input" id="shareLiveLanLink" readonly style="font-size:11px; padding:6px 10px;" />
+            <button class="btn-copy btn-copy-link" data-target="shareLiveLanLink" style="padding:6px 12px; font-size:11px; background:#282828; color:white;">
+              Copy LAN Live
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Track Direct MP3 Stream Link -->
+        <div class="share-link-group" style="background: rgba(29, 185, 84, 0.08); border: 1px solid rgba(29, 185, 84, 0.25); padding: 10px; border-radius: 8px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <label style="font-size:13px; font-weight:700; color:#1ed760; display:flex; align-items:center; gap:6px;">
+              🎵 Single Track Stream Link (.MP3)
+            </label>
+            <span style="font-size:11px; color:#1db954; font-weight:600;">Plays Only This Song</span>
+          </div>
+          <div class="share-link-row">
+            <input type="text" class="share-link-input" id="shareGameLink" readonly />
+            <button class="btn-copy btn-copy-link" data-target="shareGameLink">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Track Link
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Web Auto-Play Link -->
+        <div class="share-link-group">
+          <label style="font-size:13px; font-weight:700; color:var(--text-primary);">
+            3. Web Player Auto-Play Link (Opens in Browser)
+          </label>
+          <div class="share-link-row">
+            <input type="text" class="share-link-input" id="shareWebLink" readonly />
+            <button class="btn-copy btn-copy-link" data-target="shareWebLink">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Web Link
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Embed Code -->
+        <div class="share-link-group">
+          <label style="font-size:13px; font-weight:700; color:var(--text-primary);">
+            3. Embed Player Widget (&lt;iframe&gt;)
+          </label>
+          <div class="share-link-row">
+            <input type="text" class="share-link-input" id="shareEmbedCode" readonly />
+            <button class="btn-copy btn-copy-link" data-target="shareEmbedCode">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Embed
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Client JavaScript -->
+  <script src="/public/js/visualizer.js"></script>
+  <script src="/public/js/player.js"></script>
+  <script src="/public/js/shareModal.js"></script>
+  <script src="/public/js/app.js"></script>
+</body>
+</html>

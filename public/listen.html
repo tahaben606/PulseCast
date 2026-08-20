@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseCast • Live Stream Player</title>
+  <link rel="stylesheet" href="/public/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231db954'><circle cx='12' cy='12' r='10'/><path fill='%23000' d='M17.5 15.2c-.2.3-.6.4-.9.2-2.5-1.5-5.6-1.8-9.3-1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4-.9 7.5-.6 10.4 1.1.3.2.3.6.2.9zm1.2-2.7c-.3.4-.8.5-1.2.3-2.9-1.8-7.3-2.3-10.7-1.3-.4.1-.9-.1-1-.6-.1-.4.1-.9.6-1 3.9-1.2 8.7-.6 12 1.4.4.2.5.8.3 1.2zm.1-2.9C15.3 7.5 9.6 7.3 6.3 8.3c-.5.2-1.1-.1-1.2-.7-.2-.5.1-1.1.7-1.2 3.8-1.2 10.1-.9 14.1 1.5.5.3.6.9.3 1.4-.3.5-.9.6-1.4.3z'/></svg>" />
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 30%, #1f2b23 0%, #000000 80%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .standalone-container {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(24, 24, 24, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    .standalone-art {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+      background: #181818;
+      position: relative;
+    }
+
+    .standalone-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .autoplay-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      z-index: 20;
+      border-radius: 12px;
+    }
+
+    .autoplay-overlay.visible {
+      display: flex;
+    }
+
+    .pulse-play-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--spotify-green);
+      color: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px var(--spotify-green-glow);
+      animation: pulse 1.5s infinite;
+      border: none;
+      cursor: pointer;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(29, 185, 84, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(29, 185, 84, 0); }
+    }
+
+    .standalone-visualizer {
+      width: 100%;
+      height: 60px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+    }
+
+    .standalone-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 14px;
+    }
+
+    .footer-links a {
+      color: var(--spotify-green);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="standalone-container">
+    
+    <!-- Top Branding -->
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <a href="/" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:white; font-weight:700; font-size:14px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--spotify-green)"><circle cx="12" cy="12" r="10"/><path fill="#000" d="M17.5 15.2c-.2.3-.6.4-.9.2-2.5-1.5-5.6-1.8-9.3-1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4-.9 7.5-.6 10.4 1.1.3.2.3.6.2.9zm1.2-2.7c-.3.4-.8.5-1.2.3-2.9-1.8-7.3-2.3-10.7-1.3-.4.1-.9-.1-1-.6-.1-.4.1-.9.6-1 3.9-1.2 8.7-.6 12 1.4.4.2.5.8.3 1.2zm.1-2.9C15.3 7.5 9.6 7.3 6.3 8.3c-.5.2-1.1-.1-1.2-.7-.2-.5.1-1.1.7-1.2 3.8-1.2 10.1-.9 14.1 1.5.5.3.6.9.3 1.4-.3.5-.9.6-1.4.3z"/></svg>
+        <span>PulseCast Live</span>
+      </a>
+      <span class="badge-source badge-upload" id="sourceBadge">Live Audio</span>
+    </div>
+
+    <!-- Artwork Container with Autoplay Fallback -->
+    <div class="standalone-art">
+      <img id="trackCover" src="/public/images/default-track.png" alt="Artwork" />
+      <div class="autoplay-overlay" id="autoplayOverlay">
+        <button class="pulse-play-btn">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+        <span style="font-weight:700; font-size:14px; color:white;">Click to Listen Live</span>
+      </div>
+    </div>
+
+    <!-- Track Metadata -->
+    <div style="display:flex; flex-direction:column; gap:4px;">
+      <h2 id="trackTitle" style="font-size:20px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Loading stream...</h2>
+      <span id="trackArtist" style="font-size:14px; color:var(--text-secondary);">Connecting to audio server</span>
+    </div>
+
+    <!-- Live Audio Frequency Canvas -->
+    <canvas id="standaloneVisualizerCanvas" class="standalone-visualizer"></canvas>
+
+    <!-- Playback Seek Bar -->
+    <div class="playback-bar" style="width:100%;">
+      <span class="time-label" id="listenCurTime">0:00</span>
+      <div class="progress-track" id="listenProgressTrack" style="height:6px;">
+        <div class="progress-fill" id="listenProgressFill" style="background:var(--spotify-green);"></div>
+      </div>
+      <span class="time-label" id="listenTotalTime">0:00</span>
+    </div>
+
+    <!-- Spotify-style Control Bar -->
+    <div class="standalone-controls">
+      <button class="btn-ctrl" id="listenBtnLoop" title="Loop Track">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+      </button>
+
+      <button class="btn-play-hero" id="listenBtnPlay" style="width:60px; height:60px;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      </button>
+
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="btn-ctrl" id="listenBtnMute" title="Mute">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+        <div class="volume-track" id="listenVolumeTrack" style="width:70px;">
+          <div class="volume-fill" id="listenVolumeFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Links -->
+    <div class="footer-links">
+      <button class="btn-icon-subtle" id="listenBtnCopyStream" style="font-size:12px; gap:6px; color:var(--text-secondary); display:flex; align-items:center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Copy Audio URL
+      </button>
+      <a href="/" target="_blank">Open Full Web App →</a>
+    </div>
+  </div>
+
+  <script src="/public/js/visualizer.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const trackId = pathParts[pathParts.length - 1];
+
+      const trackTitle = document.getElementById('trackTitle');
+      const trackArtist = document.getElementById('trackArtist');
+      const trackCover = document.getElementById('trackCover');
+      const sourceBadge = document.getElementById('sourceBadge');
+      const autoplayOverlay = document.getElementById('autoplayOverlay');
+
+      const listenBtnPlay = document.getElementById('listenBtnPlay');
+      const listenProgressTrack = document.getElementById('listenProgressTrack');
+      const listenProgressFill = document.getElementById('listenProgressFill');
+      const listenCurTime = document.getElementById('listenCurTime');
+      const listenTotalTime = document.getElementById('listenTotalTime');
+      const listenBtnLoop = document.getElementById('listenBtnLoop');
+      const listenBtnMute = document.getElementById('listenBtnMute');
+      const listenVolumeTrack = document.getElementById('listenVolumeTrack');
+      const listenVolumeFill = document.getElementById('listenVolumeFill');
+      const listenBtnCopyStream = document.getElementById('listenBtnCopyStream');
+
+      const audio = new Audio(`/api/stream/${trackId}`);
+      audio.crossOrigin = "anonymous";
+      audio.volume = 0.8;
+      listenVolumeFill.style.width = '80%';
+
+      const canvas = document.getElementById('standaloneVisualizerCanvas');
+      const visualizer = new AudioVisualizer(canvas, audio);
+
+      function formatTime(s) {
+        if (isNaN(s) || s < 0) return '0:00';
+        const mins = Math.floor(s / 60);
+        const secs = Math.floor(s % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }
+
+      // Fetch track metadata
+      try {
+        const res = await fetch(`/api/tracks/${trackId}`);
+        const data = await res.json();
+        if (data.success) {
+          const track = data.track;
+          trackTitle.textContent = track.title;
+          trackArtist.textContent = track.artist;
+          document.title = `${track.title} • Live Audio Stream`;
+          if (track.thumbnail) trackCover.src = track.thumbnail;
+          sourceBadge.textContent = track.source === 'youtube' ? 'YouTube Stream' : 'Audio Upload';
+          sourceBadge.className = `badge-source ${track.source === 'youtube' ? 'badge-yt' : 'badge-upload'}`;
+        }
+      } catch (err) {
+        console.error('Failed to fetch track details:', err);
+      }
+
+      // Try Autoplay
+      function attemptPlay() {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            autoplayOverlay.classList.remove('visible');
+            visualizer.start();
+          }).catch(() => {
+            // Autoplay was blocked by browser
+            autoplayOverlay.classList.add('visible');
+          });
+        }
+      }
+
+      attemptPlay();
+
+      autoplayOverlay.addEventListener('click', () => {
+        autoplayOverlay.classList.remove('visible');
+        audio.play().then(() => visualizer.start());
+      });
+
+      // Controls
+      const playIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+      const pauseIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+
+      audio.addEventListener('play', () => {
+        listenBtnPlay.innerHTML = pauseIcon;
+        visualizer.start();
+      });
+
+      audio.addEventListener('pause', () => {
+        listenBtnPlay.innerHTML = playIcon;
+        visualizer.stop();
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        listenCurTime.textContent = formatTime(audio.currentTime);
+        listenTotalTime.textContent = formatTime(audio.duration || 0);
+        const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+        listenProgressFill.style.width = `${pct}%`;
+      });
+
+      listenBtnPlay.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play().then(() => visualizer.start());
+        } else {
+          audio.pause();
+        }
+      });
+
+      listenProgressTrack.addEventListener('click', (e) => {
+        const rect = listenProgressTrack.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        if (audio.duration) {
+          audio.currentTime = pos * audio.duration;
+        }
+      });
+
+      listenBtnLoop.addEventListener('click', () => {
+        audio.loop = !audio.loop;
+        listenBtnLoop.classList.toggle('active', audio.loop);
+      });
+
+      listenBtnMute.addEventListener('click', () => {
+        audio.muted = !audio.muted;
+        listenVolumeFill.style.width = audio.muted ? '0%' : `${audio.volume * 100}%`;
+      });
+
+      listenVolumeTrack.addEventListener('click', (e) => {
+        const rect = listenVolumeTrack.getBoundingClientRect();
+        const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        audio.volume = pos;
+        audio.muted = false;
+        listenVolumeFill.style.width = `${pos * 100}%`;
+      });
+
+      listenBtnCopyStream.addEventListener('click', () => {
+        const streamUrl = `${window.location.origin}/api/stream/${trackId}`;
+        navigator.clipboard.writeText(streamUrl).then(() => {
+          listenBtnCopyStream.innerHTML = `✓ Copied!`;
+          setTimeout(() => {
+            listenBtnCopyStream.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy Audio URL`;
+          }, 2000);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
